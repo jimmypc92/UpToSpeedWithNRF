@@ -156,13 +156,23 @@ void Led_init(void){
 
 void InitSPI(void)
 {
+	//Clear port B SPI pins for init
+	DDRB &= ~((1<<DDB3)|(1<<DDB4)|(1<<DDB2)|(1<<DDB5));
+	
 	//Set SCK (PB5), MOSI (PB3) , CSN (SS & PB2) & C  as outport
 	//OBS!!! Has to be set before SPI-Enable below
 	DDRB |= (1<<DDB5) | (1<<DDB3) | (1<<DDB2) |(1<<DDB1);
-	DDRB &= (~(1<<DDB4));
 	
 	// Enable SPI, Master, set clock rate fck/16 .. clock rate not to important..
-	SPCR |= (1<<SPE)|(1<<MSTR) |(1<<SPR0); // |(1<<SPR1);
+	//SPCR |= (1<<SPE)|(1<<MSTR) |(1<<SPR0); // |(1<<SPR1);
+	
+	SPCR = ((1<<SPE)|               // SPI Enable
+	        (0<<SPIE)|              // SPI Interupt Enable
+			(0<<DORD)|              // Data Order (0:MSB first / 1:LSB first)
+	        (1<<MSTR)|              // Master/Slave select
+	        (0<<SPR1)|(1<<SPR0)|    // SPI Clock Rate
+			(0<<CPOL)|              // Clock Polarity (0:SCK low / 1:SCK hi when idle)
+	        (0<<CPHA));             // Clock Phase (0:leading / 1:trailing edge sampling)
 	
 	//PORTB |= (1 <<2);
 	SETBIT(PORTB, 2);	//CSN IR_High to start with, nothing to be sent to the nRF yet!
@@ -171,13 +181,13 @@ void InitSPI(void)
 }
 
 //Sends and receives a byte through SPI
-unsigned char WriteByteSPI(unsigned char cData)
+uint8_t WriteByteSPI(uint8_t cData)
 {
 	//Load byte to Data register
 	SPDR = cData;
 	
 	/* Wait for transmission complete */
-	while(!(SPSR)&(1<<SPIF));
+	while((SPSR & (1<<SPIF))==0);
 	
 	//Return what's received from the nRF
 	return SPDR;
@@ -187,10 +197,10 @@ unsigned char WriteByteSPI(unsigned char cData)
 uint8_t GetReg(uint8_t reg)
 {
 	//make sure last command was a while ago
-	_delay_us(15);
+	_delay_us(55);
 	//PORTB &= (~(1<<2)); 
 	CLEARBIT(PORTB, 2);	//CSN low - nRF starts to listen for command
-	_delay_us(15);
+	_delay_us(55);
 	WriteByteSPI(R_REGISTER + reg);	//R_Register = set the nRF to reading mode, "reg" = this register well be read back
 	_delay_us(15);
 	reg = WriteByteSPI(NOP);	//Send NOP (dummy byte) once to receive back the first byte in the "reg" register
@@ -206,18 +216,18 @@ uint8_t *WriteToNrf(uint8_t ReadWrite, uint8_t reg, uint8_t *val, uint8_t antVal
 	
 	if (ReadWrite == W)	//if "W" then you want to write to the nRF (read mode "R" == 0x00, so skipping that one)
 	{
-		reg = W_REGISTER + reg;	//ex: reg = EN_AA: 0b0010 0000 + 0b0000 0001 = 0b0010 0001
+		reg = W_REGISTER | (REGISTER_MASK & reg);	//ex: reg = EN_AA: 0b0010 0000 + 0b0000 0001 = 0b0010 0001
 	}
 	
 	//Create an array to be returned at the end.
 	//Static uint8_t is needed to be able to return an array
 	static uint8_t ret[32];	
 	
-	_delay_us(10);		//make sure the last command was a while ago
+	_delay_us(55);		//make sure the last command was a while ago
 	CLEARBIT(PORTB, 2);	//CSN low = nRF starts to listen for command
-	_delay_us(10);
+	//_delay_us(55);
 	WriteByteSPI(reg);	//set the nRF to Write or read mode of "reg"
-	_delay_us(10);
+	//_delay_us(15);
 	
 	int i;
 	for(i=0; i<antVal; i++)
@@ -225,19 +235,19 @@ uint8_t *WriteToNrf(uint8_t ReadWrite, uint8_t reg, uint8_t *val, uint8_t antVal
 		if (ReadWrite == R && reg != W_TX_PAYLOAD)
 		{
 			ret[i]=WriteByteSPI(NOP);	//send dummy bytes to read out the data
-			_delay_us(10);
+			//_delay_us(15);
 		}
 		else
 		{
 			WriteByteSPI(val[i]);	//Send the commands to the nRF once at a time
-			_delay_us(10);
+			//_delay_us(15);
 		}
 	}
 	SETBIT(PORTB, 2);	//CSN Hi - nRF goes back to doing nothing.
 	
 	sei(); //enable global interrupt
 	
-	return ret;	//returnerar en array
+	return ret;	//return an array
 }
 
 //Initializes the nRF.
@@ -247,6 +257,18 @@ void nrf24L01_init(void)
 	
 	uint8_t val[5];	//An array of integers to send to the *WriteToNrf function
 	
+	//RF channel setup - choose frequency 2,400 - 2,527GHz 1MHz/step
+	val[0]=0x05;
+	WriteToNrf(W, RF_CH, val, 1); //RF channel registry 0b0000 0001 = 2,401GHz (same on TX and RX)
+		
+	// payload width setup - 1-32byte (how many bytes to send per transmission)
+	val[0]=5;		//Send 1 bytes per package this time (same on receiver and transmitter)
+	WriteToNrf(W, RX_PW_P0, val, 1);
+	
+	// payload width setup - 1-32byte (how many bytes to send per transmission)
+	val[0]=5;		//Send 5 bytes per package this time (same on receiver and transmitter)
+	WriteToNrf(W, RX_PW_P1, val, 1);
+		
 	//EN_AA - (auto-acknowledgements) - Transmitter gets automatic response from receiver when successful transmission! (lovely function!)
 	//Only works if Transmitter has identical RF_Address on its channel ex: RX_ADDR_P0 = TX_ADDR
 	val[0]=0x01;	//Set value
@@ -257,16 +279,12 @@ void nrf24L01_init(void)
 	WriteToNrf(W, SETUP_RETR, val, 1);
 	
 	////Choose number of enabled data pipes (1-5)
-	val[0]=0x01;
+	val[0]=0x0F;
 	WriteToNrf(W, EN_RXADDR, val, 1); //enable data pipe 0
 	
 	//RF_Address width setup (how many bytes is the receiver address, the more the merrier 1-5)
-	val[0]=0x03;
-	WriteToNrf(W, SETUP_AW, val, 1); //0b0000 00011 5 bytes RF_Address
-	
-	//RF channel setup - choose frequency 2,400 - 2,527GHz 1MHz/step
-	val[0]=0x01;
-	WriteToNrf(W, RF_CH, val, 1); //RF channel registry 0b0000 0001 = 2,401GHz (same on TX and RX)
+	//val[0]=0x03;
+	//WriteToNrf(W, SETUP_AW, val, 1); //0b0000 00011 5 bytes RF_Address
 	
 	//RF setup	- choose power mode and data speed. Here is the difference with the (+) version!!!
 	val[0]=0x07;
@@ -276,26 +294,42 @@ void nrf24L01_init(void)
 	int i;
 	for(i=0; i<5; i++)
 	{
-		val[i]=0x12;	//0x12 x 5 to get a long secure address
+		val[i]=0x55;	//0x58 x 5 to get a long secure address
 	}
 	WriteToNrf(W, RX_ADDR_P0, val, 5); //0b0010 1010 write registry
+	//Since we chose pipe 0 on EN_RXADDR we give this address to that channel.
+	
+	//Here you can give different addresses to different channels (if they are enabled in EN_RXADDR) to listen on several different transmitters	//RX RF_Adress setup 5 byte - Set Receiver Address (set RX_ADDR_P0 = TX_ADDR if EN_AA is enabled!!!)
+	for(i=0; i<5; i++)
+	{
+		val[i]=0x12;	//0x12 x 5 to get a long secure address
+	}
+	WriteToNrf(W, RX_ADDR_P1, val, 5); //0b0010 1010 write registry
 	//Since we chose pipe 0 on EN_RXADDR we give this address to that channel.
 	//Here you can give different addresses to different channels (if they are enabled in EN_RXADDR) to listen on several different transmitters
 	
 	//TX RF_Adress setup 5 byte -  Set Transmitter address (not used in a receiver but can be set anyway)
-	//int i; //återanvänder föregående i...
 	for(i=0; i<5; i++)
 	{
-		val[i]=0x12;	//0x12 x 5 same on the receiver chip and the RX-RF_Address above if EN_AA is enabled!!!
+		val[i]=0x58;	//0x58 x 5 same on the receiver chip and the RX-RF_Address above if EN_AA is enabled!!!
 	}
 	WriteToNrf(W, TX_ADDR, val, 5);
 	
-	// payload width setup - 1-32byte (how many bytes to send per transmission)
-	val[0]=5;		//Send 5 bytes per package this time (same on receiver and transmitter)
-	WriteToNrf(W, RX_PW_P0, val, 1);
+	//RF channel setup - choose frequency 2,400 - 2,527GHz 1MHz/step
+	val[0]=0x05;
+	WriteToNrf(W, RF_CH, val, 1); //RF channel registry 0b0000 0001 = 2,401GHz (same on TX and RX)
+	
+	//Here you can give different addresses to different channels (if they are enabled in EN_RXADDR) to listen on several different transmitters	//RX RF_Adress setup 5 byte - Set Receiver Address (set RX_ADDR_P0 = TX_ADDR if EN_AA is enabled!!!)
+	for(i=0; i<5; i++)
+	{
+		val[i]=0x12;	//0x12 x 5 to get a long secure address
+	}
+	WriteToNrf(W, RX_ADDR_P1, val, 5); //0b0010 1010 write registry
+	//Since we chose pipe 0 on EN_RXADDR we give this address to that channel.
+	//Here you can give different addresses to different channels (if they are enabled in EN_RXADDR) to listen on several different transmitters
 	
 	//CONFIG reg setup - Now it's time to boot up the nRF and choose if it's supposed to be a transmitter or receiver
-	val[0]=0x1E;  //0b0000 1110 - bit 0="0":transmitter bit 0="1":Receiver, bit 1="1"power up,
+	val[0]=0x7D;  //0b0000 1110 - bit 0="0":transmitter bit 0="1":Receiver, bit 1="1"power up,
 					//bit 4="1": mask_Max_RT i.e. IRQ-interrupt is not triggered if transmission failed.
 	WriteToNrf(W, CONFIG, val, 1);
 	
@@ -305,6 +339,42 @@ void nrf24L01_init(void)
 	//sei();
 }
 
+void transmit_payload(uint8_t * W_buff)
+{
+	WriteToNrf(R, FLUSH_TX, W_buff, 0); //Sends 0xE1 to flush the registry from old data! W_BUFF[] is only there because an array has to be called with an array..
+	WriteToNrf(R, W_TX_PAYLOAD, W_buff, 5);	//Sends the data in W_buff to the nRF
+	
+	//sei();	//enable global interrupt
+	//USART_Transmit(GetReg(STATUS));
+	
+	_delay_ms(10);		//Needs a 10ms delay to work after loading the nRF with the payload for some reason.
+	SETBIT(PORTB, 1);	//CE high=transmit the data
+	_delay_us(500);		//delay at least 10us
+	CLEARBIT(PORTB, 1);	//CE low=stop transmitting
+	_delay_ms(10);		//long delay again before proceeding.
+	
+	//cli();	//Disable global interrupt
+	
+}
+
+
+//Working tested 2/23/2015 12:28 PM.
+void reset(void)
+{
+	_delay_us(55);
+	CLEARBIT(PORTB, 2);	//CSN low
+	_delay_us(55);
+	WriteByteSPI(W_REGISTER + STATUS);	//write to status register
+	_delay_us(10);
+	WriteByteSPI(0x70);	//reset all irq in status register
+	_delay_us(10);
+	SETBIT(PORTB, 2);	//CSN IR_High
+}
+
+/*
+* End of code used for NRF.
+*/
+
 
 void SendHexiByte(uint8_t byte)
 {
@@ -313,11 +383,32 @@ void SendHexiByte(uint8_t byte)
 	
 	upper = ((upper >> 4) & 0b00001111);
 	
-	USART_SendByte(upper + 'A');
-	USART_SendByte(lower + 'A');
+	if(upper <10)
+	{
+		USART_SendByte(upper+'0');
+	}
+	else
+	{
+		USART_SendByte((upper-10) + 'A');
+	}
+	if(lower <10)
+	{
+		USART_SendByte(lower+'0');
+	}
+	else
+	{
+		USART_SendByte((lower-10) + 'A');
+	}
 }
 
-
+void SendHexiArary(uint8_t *bytes, int length)
+{
+	int i = 0;
+	for(i=0;i<length;i++)
+	{
+		SendHexiByte(bytes[i]);
+	}
+}
 
 
 
@@ -331,20 +422,48 @@ int main(void){
    nrf24L01_init();
    value = 'A'; //0x41;    
    PORTB |= 0x01; // 0 = LED on
+   uint8_t packet[5];
+   
+   int i;
+   for(i=0;i<5;i++)
+   {
+	   packet[i] ='H';
+   }
    
    for(;;){    // Repeat indefinitely
              
-	if(value == 0x41)
+	if(value >= 'A' && value <= 'J')
 	{
-		PORTB |= 0x01;
-		SendHexiByte(GetReg(EN_AA));
-		value = 0x43;
+		SendHexiByte(GetReg(value - 'A'));
+		value = 0x00;
 	}
-	else if(value == 0x45)
+	else if(value == 'K')
 	{
-		PORTB |= 0x01;
-		SendHexiByte(GetReg(STATUS));
-		value = 0x43;
+		SendHexiArary(WriteToNrf(R, TX_ADDR, packet, 5),5);
+		value = 0x0;
+	}
+	else if(value == 'L')
+	{
+		SendHexiArary(WriteToNrf(R, RX_ADDR_P1, packet, 5),5);
+		value = 0x0;
+	}
+	else if (value == 'M')
+	{
+		transmit_payload(packet);
+		SendHexiByte(0xFF);
+		value = 0x0;
+	}
+	else if (value == 'N')
+	{
+		reset();
+		SendHexiByte(0xFF);
+		value = 0x0;
+	}
+	else if(value >= 'O' && value <= 'Q')
+	{
+		//for rx_pw
+		SendHexiByte(GetReg((value - 'O')+ 0X11 ));
+		value = 0x00;
 	}
 	else
 	{
