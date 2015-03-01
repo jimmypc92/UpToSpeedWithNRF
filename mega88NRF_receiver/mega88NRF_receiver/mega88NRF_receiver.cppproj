@@ -4,7 +4,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectVersion>6.2</ProjectVersion>
     <ToolchainName>com.Atmel.AVRGCC8.CPP</ToolchainName>
-    <ProjectGuid>{d12d6808-ffd6-4642-81d3-35006f99e46a}</ProjectGuid>
+    <ProjectGuid>{a041df30-4933-4153-93c5-314f5588599e}</ProjectGuid>
     <avrdevice>ATmega88A</avrdevice>
     <avrdeviceseries>none</avrdeviceseries>
     <OutputType>Executable</OutputType>
@@ -12,9 +12,9 @@
     <OutputFileName>$(MSBuildProjectName)</OutputFileName>
     <OutputFileExtension>.elf</OutputFileExtension>
     <OutputDirectory>$(MSBuildProjectDirectory)\$(Configuration)</OutputDirectory>
-    <AssemblyName>NRF24L01mega88test</AssemblyName>
-    <Name>NRF24L01mega88test</Name>
-    <RootNamespace>NRF24L01mega88test</RootNamespace>
+    <AssemblyName>mega88NRF_receiver</AssemblyName>
+    <Name>mega88NRF_receiver</Name>
+    <RootNamespace>mega88NRF_receiver</RootNamespace>
     <ToolchainFlavour>Native</ToolchainFlavour>
     <KeepTimersRunning>true</KeepTimersRunning>
     <OverrideVtor>false</OverrideVtor>
@@ -28,15 +28,15 @@
     <eraseonlaunchrule>1</eraseonlaunchrule>
     <AsfFrameworkConfig>
       <framework-data xmlns="">
-        <options />
-        <configurations />
-        <files />
-        <documentation help="" />
-        <offline-documentation help="" />
-        <dependencies>
-          <content-extension eid="atmel.asf" uuidref="Atmel.ASF" version="3.19.0" />
-        </dependencies>
-      </framework-data>
+  <options />
+  <configurations />
+  <files />
+  <documentation help="" />
+  <offline-documentation help="" />
+  <dependencies>
+    <content-extension eid="atmel.asf" uuidref="Atmel.ASF" version="3.19.0" />
+  </dependencies>
+</framework-data>
     </AsfFrameworkConfig>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
@@ -72,14 +72,8 @@
   <avrgcccpp.linker.libraries.Libraries>
     <ListValues>
       <Value>libm</Value>
-      <Value>libLibCircBuff.a</Value>
     </ListValues>
   </avrgcccpp.linker.libraries.Libraries>
-  <avrgcccpp.linker.libraries.LibrarySearchPaths>
-    <ListValues>
-      <Value>C:\Users\Jimmy\Documents\Atmel Studio\6.2\LibCircBuff\LibCircBuff\Release</Value>
-    </ListValues>
-  </avrgcccpp.linker.libraries.LibrarySearchPaths>
 </AvrGccCpp>
     </ToolchainSettings>
   </PropertyGroup>
@@ -118,26 +112,14 @@
   <avrgcccpp.linker.libraries.Libraries>
     <ListValues>
       <Value>libm</Value>
-      <Value>libLibCircBuff.a</Value>
     </ListValues>
   </avrgcccpp.linker.libraries.Libraries>
-  <avrgcccpp.linker.libraries.LibrarySearchPaths>
-    <ListValues>
-      <Value>C:\Users\Jimmy\Documents\Atmel Studio\6.2\LibCircBuff\LibCircBuff\Release</Value>
-    </ListValues>
-  </avrgcccpp.linker.libraries.LibrarySearchPaths>
   <avrgcccpp.assembler.debugging.DebugLevel>Default (-Wa,-g)</avrgcccpp.assembler.debugging.DebugLevel>
 </AvrGccCpp>
     </ToolchainSettings>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="LibCircBuff.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="nRF24L01.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="NRF24L01mega88test.cpp">
+    <Compile Include="mega88NRF_receiver.cpp">
       <SubType>compile</SubType>
     </Compile>
   </ItemGroup>

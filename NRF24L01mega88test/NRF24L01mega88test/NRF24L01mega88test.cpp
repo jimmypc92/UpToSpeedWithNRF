@@ -6,6 +6,7 @@
  */ 
 
 #define F_CPU 8000000UL  // 8 MHz
+#define BUFF_SIZE 64 //Declare Buff_Size for ring buffer.
 
 /*Very Important - change F_CPU to match target clock 
   Note: default AVR CLKSEL is 1MHz internal RC
@@ -20,70 +21,24 @@
 #include <avr/interrupt.h>
 
 #include "nRF24L01.h"
+#include "LibCircBuff.h"
 
 // Define baud rate
 #define USART_BAUDRATE 9600
 #define BAUD_PRESCALE (((F_CPU / (USART_BAUDRATE * 16UL))) - 1)
-#define BUFF_SIZE 64
 
 volatile unsigned char value;  
 /* This variable is volatile so both main and RX interrupt can use it.
 It could also be a uint8_t type */
 
-/*
-* Ring Buffer with size of BUFF_SIZE (recommend 64)
-* Head points to the first valid byte in the buffer
-* Tail points to the next open space.
-* At first head points to an uninitialized byte so
-* A write must be done.
-*/
-typedef struct {
-	unsigned char Data[BUFF_SIZE];
-	unsigned char Head;
-	unsigned char Tail;
-	unsigned int OverRun;
-} CircBuff_t;
-
 volatile CircBuff_t rBuff;
-
-/*
-* Initializes the head and tail state for the ring buffer
-*/
-void initCircBuff(volatile CircBuff_t *cBuff)
-{
-	cBuff->Head = 0; //Points to the first valid byte in the buffer
-	cBuff->Tail = 1; //points to next empty byte
-	cBuff->OverRun = 0; //true false overrun
-}
-
-//This reads the value that is pointed to by head
-//Then head is incremented to the next spot
-//Wrapping is handled with modulus of BUFF_SIZE
-//NO OVERFLOW CHECKING IMPLEMENTED
-unsigned char readCircbuff(volatile CircBuff_t *cBuff)
-{
-	unsigned char readVal = cBuff->Data[cBuff->Head];
-	cBuff->Head= (cBuff->Head+1)%BUFF_SIZE;
-	return readVal;
-}
-
-//This writes to the next available space which
-//is pointed to by tail
-//Then tail is incremented by 1
-//Wrapping is handled by modulus of BUFF_SIZE
-//NO OVERFLOW CHECKING IMPLEMENTED
-void writeCircBuff(volatile CircBuff_t *cBuff, unsigned char val)
-{
-	cBuff->Data[cBuff->Head] = val;
-	cBuff->Tail = (cBuff->Tail+1)%BUFF_SIZE;
-}
 
 /* Interrupt Service Routine for Receive Complete 
 NOTE: vector name changes with different AVRs see AVRStudio -
 Help - AVR-Libc reference - Library Reference - <avr/interrupt.h>: Interrupts
 for vector names other than USART_RXC_vect for ATmega32 */
 
-ISR(USART_RX_vect){
+ISR(USART_RX_vect) {
  
    cli(); // Turn off interrupts temporarily to make sure the data gets stored in the ring buffer
    value = UDR0;             //read UART register into value
@@ -91,7 +46,7 @@ ISR(USART_RX_vect){
    sei();  //Reenable interrupts
 }
 
-void USART_Init(void){
+void USART_Init(void) {
    // Set baud rate
    //UBRR0L = BAUD_PRESCALE;// Load lower 8-bits into the low byte of the UBRR register
    //UBRR0H = (BAUD_PRESCALE >> 8); 
@@ -125,7 +80,7 @@ void USART_Init(void){
 }
 
 
-void USART_SendByte(uint8_t u8Data){
+void USART_SendByte(uint8_t u8Data) {
 
   // Wait until last byte has been transmitted
   while((UCSR0A &(1<<UDRE0)) == 0);
@@ -136,12 +91,13 @@ void USART_SendByte(uint8_t u8Data){
 
 // not being used but here for completeness
       // Wait until a byte has been received and return received data 
-uint8_t USART_ReceiveByte(){
+uint8_t USART_ReceiveByte() {
   while((UCSR0A &(1<<RXC0)) == 0);
   return UDR0;
 }
 
-uint8_t Determine(uint8_t c){
+//Turns a hexidecimal character into the actual number it represents
+uint8_t Determine(uint8_t c) {
 	if(c >= 0x30 && c <= 0x39){
 		c-= 0x30;
 	}
@@ -151,18 +107,52 @@ uint8_t Determine(uint8_t c){
 	return c;
 }
 
-uint8_t USART_ReceiveHexi(){
-	
+uint8_t USART_ReceiveHexi() {
 	uint8_t upper = Determine(USART_ReceiveByte());
 	uint8_t lower = Determine(USART_ReceiveByte());
 	upper = upper << 4;
 	return upper | lower;
 }
 
+void SendHexiByte(uint8_t byte) {
+	char upper = (byte & 0b11110000 );
+	char lower = (byte & 0b00001111 );
+	
+	upper = ((upper >> 4) & 0b00001111);
+	
+	if(upper <10) {
+		USART_SendByte(upper+'0');
+	}
+	else {
+		USART_SendByte((upper-10) + 'A');
+	}
+	if(lower <10) {
+		USART_SendByte(lower+'0');
+	}
+	else {
+		USART_SendByte((lower-10) + 'A');
+	}
+}
+
+void SendHexiArary(uint8_t *bytes, int length) {
+	int i = 0;
+	for(i=0;i<length;i++) {
+		SendHexiByte(bytes[i]);
+	}
+}
+
+void serialSendString(const char *str) {
+	int i=0;
+	while(str[i] != 0x00) {
+		USART_SendByte(str[i]);
+		i++;
+	}
+}
+
 
 //This assumes that an led is attached to Port B pin 0
 //+ side on pin 0, - side connected to resistor connecting to ground.
-void Led_init(void){
+void Led_init(void) {
 	//outputs, PB0 on
 	DDRB |= 0x01;       
 	PORTB |= 0x01;        
@@ -172,8 +162,7 @@ void Led_init(void){
 * NRF usage functions come after this.
 */
 
-void InitSPI(void)
-{
+void InitSPI(void) {
 	//Clear port B SPI pins for init
 	DDRB &= ~((1<<DDB3)|(1<<DDB4)|(1<<DDB2)|(1<<DDB5));
 	
@@ -201,8 +190,7 @@ void InitSPI(void)
 }
 
 //Sends and receives a byte through SPI
-uint8_t WriteByteSPI(uint8_t cData)
-{
+uint8_t WriteByteSPI(uint8_t cData) {
 	//Load byte to Data register
 	SPDR = cData;
 	
@@ -214,8 +202,7 @@ uint8_t WriteByteSPI(uint8_t cData)
 }
 
 //Read a register from the nRF
-uint8_t GetReg(uint8_t reg)
-{
+uint8_t GetReg(uint8_t reg) {
 	//make sure last command was a while ago
 	//PORTB &= (~(1<<2)); 
 	CLEARBIT(PORTB, 2);	//CSN low - nRF starts to listen for command
@@ -226,12 +213,10 @@ uint8_t GetReg(uint8_t reg)
 	return reg;	// Return the read register
 }
 
-uint8_t *WriteToNrf(uint8_t ReadWrite, uint8_t reg, uint8_t *val, uint8_t antVal)	//tar in "ReadWrite" (W el R), "reg" (ett register), "*val" (en array) & "antVal" (antal integer i variabeln)
-{
+uint8_t *WriteToNrf(uint8_t ReadWrite, uint8_t reg, uint8_t *val, uint8_t antVal) {	//tar in "ReadWrite" (W el R), "reg" (ett register), "*val" (en array) & "antVal" (antal integer i variabeln)
 	cli();	//disable global interrupt
 	
-	if (ReadWrite == W)	//if "W" then you want to write to the nRF (read mode "R" == 0x00, so skipping that one)
-	{
+	if (ReadWrite == W) {	//if "W" then you want to write to the nRF (read mode "R" == 0x00, so skipping that one)
 		reg = W_REGISTER | (REGISTER_MASK & reg);	//ex: reg = EN_AA: 0b0010 0000 + 0b0000 0001 = 0b0010 0001
 	}
 	
@@ -243,15 +228,12 @@ uint8_t *WriteToNrf(uint8_t ReadWrite, uint8_t reg, uint8_t *val, uint8_t antVal
 	WriteByteSPI(reg);	//set the nRF to Write or read mode of "reg"
 	
 	int i;
-	for(i=0; i<antVal; i++)
-	{
-		if (ReadWrite == R && reg != W_TX_PAYLOAD)
-		{
+	for(i=0; i<antVal; i++) {
+		if (ReadWrite == R && reg != W_TX_PAYLOAD) {
 			ret[i]=WriteByteSPI(NOP);	//send dummy bytes to read out the data
 			//_delay_us(15);
 		}
-		else
-		{
+		else {
 			WriteByteSPI(val[i]);	//Send the commands to the nRF once at a time
 			//_delay_us(15);
 		}
@@ -264,24 +246,27 @@ uint8_t *WriteToNrf(uint8_t ReadWrite, uint8_t reg, uint8_t *val, uint8_t antVal
 }
 
 //Initializes the nRF.
-void nrf24L01_init(void)
-{
+void nrf24L01_init(void) {
 	_delay_ms(100);	//allow radio to reach power down if shut down
 	
 	uint8_t val[5];	//An array of integers to send to the *WriteToNrf function
 	
 	//RF channel setup - choose frequency 2,400 - 2,527GHz 1MHz/step
-	val[0]=0x05;
+	val[0]=0x18;
 	WriteToNrf(W, RF_CH, val, 1); //RF channel registry 0b0000 0001 = 2,401GHz (same on TX and RX)
-		
-	// payload width setup - 1-32byte (how many bytes to send per transmission)
-	val[0]=5;		//Send 1 bytes per package this time (same on receiver and transmitter)
-	WriteToNrf(W, RX_PW_P0, val, 1);
 	
 	//EN_AA - (auto-acknowledgements) - Transmitter gets automatic response from receiver when successful transmission! (lovely function!)
 	//Only works if Transmitter has identical RF_Address on its channel ex: RX_ADDR_P0 = TX_ADDR
 	val[0]=0x3F;	//Set value
 	WriteToNrf(W, EN_AA, val, 1);	//W=write mode, EN_AA=register to write to, val=data to write, 1 = number of data bytes.
+		
+	// payload width setup - 1-32byte (how many bytes to send per transmission)
+	val[0]=5;		//Send 5 bytes per package this time (same on receiver and transmitter)
+	WriteToNrf(W, RX_PW_P0, val, 1);
+	
+	// payload width setup - 1-32byte (how many bytes to send per transmission)
+	val[0]=5;		//Send 5 bytes per package this time (same on receiver and transmitter)
+	WriteToNrf(W, RX_PW_P1, val, 1);
 	
 	//Sets number of retries and retry delay
 	val[0]=0x2F;	//0b0010 00011 "2" sets it up to 750uS delay between every retry (at least 500us at 250kbps and if payload >5bytes in 1Mbps, and if payload >15byte in 2Mbps) "F" is number of retries (1-15, now 15)
@@ -292,8 +277,8 @@ void nrf24L01_init(void)
 	WriteToNrf(W, EN_RXADDR, val, 1); //enable data pipe 0
 	
 	//RF_Address width setup (how many bytes is the receiver address, the more the merrier 1-5)
-	//val[0]=0x03;
-	//WriteToNrf(W, SETUP_AW, val, 1); //0b0000 00011 5 bytes RF_Address
+	val[0]=0x03;
+	WriteToNrf(W, SETUP_AW, val, 1); //0b0000 00011 5 bytes RF_Address
 	
 	//RF setup	- choose power mode and data speed. Here is the difference with the (+) version!!!
 	val[0]=0x07;
@@ -303,24 +288,28 @@ void nrf24L01_init(void)
 	int i;
 	for(i=0; i<5; i++)
 	{
-		val[i]=0x10;	//0x58 x 5 to get a long secure address
+		val[i]=0x12;	//0x58 x 5 to get a long secure address
 	}
 	WriteToNrf(W, RX_ADDR_P0, val, 5); //0b0010 1010 write registry
+	//Since we chose pipe 0 on EN_RXADDR we give this address to that channel.
+	
+	//RX RF_Adress setup 5 byte - Set Receiver Address (set RX_ADDR_P0 = TX_ADDR if EN_AA is enabled!!!)
+	for(i=0; i<5; i++)
+	{
+		val[i]=0x74;	//0x58 x 5 to get a long secure address
+	}
+	WriteToNrf(W, RX_ADDR_P1, val, 5); //0b0010 1010 write registry
 	//Since we chose pipe 0 on EN_RXADDR we give this address to that channel.
 	
 	//TX RF_Adress setup 5 byte -  Set Transmitter address (not used in a receiver but can be set anyway)
 	for(i=0; i<5; i++)
 	{
-		val[i]=0x10;	//0x58 x 5 same on the receiver chip and the RX-RF_Address above if EN_AA is enabled!!!
+		val[i]=0x12;	//0x58 x 5 same on the receiver chip and the RX-RF_Address above if EN_AA is enabled!!!
 	}
 	WriteToNrf(W, TX_ADDR, val, 5);
 	
-	//RF channel setup - choose frequency 2,400 - 2,527GHz 1MHz/step
-	val[0]=0x05;
-	WriteToNrf(W, RF_CH, val, 1); //RF channel registry 0b0000 0001 = 2,401GHz (same on TX and RX)
-	
 	//CONFIG reg setup - Now it's time to boot up the nRF and choose if it's supposed to be a transmitter or receiver
-	val[0]=0x0E;  //0b0000 1110 - bit 0="0":transmitter bit 0="1":Receiver, bit 1="1"power up,
+	val[0]=0x1E;  //0b0000 1110 - bit 0="0":transmitter bit 0="1":Receiver, bit 1="1"power up,
 					//bit 4="1": mask_Max_RT i.e. IRQ-interrupt is not triggered if transmission failed.
 	WriteToNrf(W, CONFIG, val, 1);
 	
@@ -330,8 +319,7 @@ void nrf24L01_init(void)
 	//sei();
 }
 
-void transmit_payload(uint8_t * W_buff)
-{
+void transmit_payload(uint8_t * W_buff) {
 	WriteToNrf(R, FLUSH_TX, W_buff, 0); //Sends 0xE1 to flush the registry from old data! W_BUFF[] is only there because an array has to be called with an array..
 	WriteToNrf(R, W_TX_PAYLOAD, W_buff, 5);	//Sends the data in W_buff to the nRF
 	
@@ -350,8 +338,7 @@ void transmit_payload(uint8_t * W_buff)
 
 
 //Working tested 2/23/2015 12:28 PM.
-void reset(void)
-{
+void reset(void) {
 	_delay_us(55);
 	CLEARBIT(PORTB, 2);	//CSN low
 	_delay_us(55);
@@ -367,52 +354,6 @@ void reset(void)
 */
 
 
-void SendHexiByte(uint8_t byte)
-{
-	char upper = (byte & 0b11110000 );
-	char lower = (byte & 0b00001111 );
-	
-	upper = ((upper >> 4) & 0b00001111);
-	
-	if(upper <10)
-	{
-		USART_SendByte(upper+'0');
-	}
-	else
-	{
-		USART_SendByte((upper-10) + 'A');
-	}
-	if(lower <10)
-	{
-		USART_SendByte(lower+'0');
-	}
-	else
-	{
-		USART_SendByte((lower-10) + 'A');
-	}
-}
-
-void SendHexiArary(uint8_t *bytes, int length)
-{
-	int i = 0;
-	for(i=0;i<length;i++)
-	{
-		SendHexiByte(bytes[i]);
-	}
-}
-
-void serialSendString(const char *str)
-{
-	int i=0;
-	while(str[i] != 0x00)
-	{
-		USART_SendByte(str[i]);
-		i++;
-	}
-}
-
-
-
 int main(void){
    initCircBuff(&rBuff);
    USART_Init();  // Initialize USART
@@ -424,115 +365,105 @@ int main(void){
    uint8_t packet[5];
    
    int i;
-   for(i=0;i<5;i++)
-   {
+   for(i=0;i<5;i++) {
 	   packet[i] ='H';
    }
    
-   for(;;){    // Repeat indefinitely
+   for(;;) {    // Repeat indefinitely
              
-	value = USART_ReceiveByte();
-	USART_SendByte(value);
-	USART_SendByte(' ');
+		value = USART_ReceiveByte();
+		USART_SendByte(value);
+		USART_SendByte(' ');
 			 
-	if(value == 'R')
-	{
-		serialSendString("Which register do you want to read\n\r");
-		uint8_t reg = USART_ReceiveHexi();
-		serialSendString("You picked register ");
-		SendHexiByte(reg);
-		serialSendString(": ");
-		SendHexiByte(GetReg(reg));
-		USART_SendByte('\n');
-		USART_SendByte('\r');
-		value = 0x00;
-	}
-	else if (value == 'W')
-	{
-		serialSendString("Which register do you want to write\n\r");
-		uint8_t reg = USART_ReceiveHexi();
-		serialSendString("You picked register ");
-		SendHexiByte(reg);
-		serialSendString(" What do you want to write to it\n\r");
-		uint8_t writeData = USART_ReceiveHexi();
-		packet[0] = writeData;
-		WriteToNrf(W, reg, packet, 1);
-		serialSendString("You wrote:");
-		SendHexiByte(writeData);
-		USART_SendByte('\n');
-		USART_SendByte('\r');
-		value = 0x00;
-	}
-	else if(value == 'S'){
-		serialSendString("Which array address do you want to read\n\r");
-		uint8_t reg = USART_ReceiveHexi();
-		serialSendString("You picked address ");
-		SendHexiByte(reg);
-		serialSendString(": ");
-		SendHexiArary(WriteToNrf(R, RX_ADDR_P0 + reg, packet, 5),5);
-	}
-	else if(value == 'V'){
-		serialSendString("Which array address do you want to write\n\r");
-		uint8_t reg = USART_ReceiveHexi();
-		serialSendString("You picked address ");
-		SendHexiByte(reg);
-		serialSendString(" What do you want to write to it\n\r");
-		for(i=0;i<5;i++)
-		{
-			packet[i] = USART_ReceiveHexi();
+		if(value == 'R') {
+			serialSendString("Which register do you want to read\n\r");
+			uint8_t reg = USART_ReceiveHexi();
+			serialSendString("You picked register ");
+			SendHexiByte(reg);
+			serialSendString(": ");
+			SendHexiByte(GetReg(reg));
+			USART_SendByte('\n');
+			USART_SendByte('\r');
+			value = 0x00;
 		}
-		WriteToNrf(W, RX_ADDR_P0 + reg, packet, 5);
-		serialSendString("You wrote: ");
-		SendHexiArary(packet,5);
-		USART_SendByte('\n');
-		USART_SendByte('\r');
-	}		 
-	else if(value >= 'A' && value <= 'J')
-	{
-		SendHexiByte(GetReg(value - 'A'));
-		value = 0x00;
-	}
-	else if(value == 'K')
-	{
-		SendHexiArary(WriteToNrf(R, TX_ADDR, packet, 5),5);
-		value = 0x0;
-	}
-	else if(value == 'L')
-	{
-		SendHexiArary(WriteToNrf(R, RX_ADDR_P1, packet, 5),5);
-		value = 0x0;
-	}
-	else if (value == 'M')
-	{
-		transmit_payload(packet);
-		SendHexiByte(0xFF);
-		value = 0x0;
-	}
-	else if (value == 'N')
-	{
-		reset();
-		SendHexiByte(0xFF);
-		value = 0x0;
-	}
-	else if(value >= 'O' && value <= 'Q')
-	{
-		//for rx_pw
-		SendHexiByte(GetReg((value - 'O')+ 0X11 ));
-		value = 0x00;
-	}
-	else
-	{
-		PORTB &= (~(0x01));
-	}
+		else if (value == 'W') {
+			serialSendString("Which register do you want to write\n\r");
+			uint8_t reg = USART_ReceiveHexi();
+			serialSendString("You picked register ");
+			SendHexiByte(reg);
+			serialSendString(" What do you want to write to it\n\r");
+			uint8_t writeData = USART_ReceiveHexi();
+			packet[0] = writeData;
+			WriteToNrf(W, reg, packet, 1);
+			serialSendString("You wrote:");
+			SendHexiByte(writeData);
+			USART_SendByte('\n');
+			USART_SendByte('\r');
+			value = 0x00;
+		}
+		else if(value == 'S') {
+			serialSendString("Which array address do you want to read\n\r");
+			serialSendString("00: RX_P0, 01: RX_P1, 06: TX_ADDR\n\r");
+			uint8_t reg = USART_ReceiveHexi();
+			serialSendString("You picked address ");
+			SendHexiByte(reg);
+			serialSendString("\n\rValue: ");
+			SendHexiArary(WriteToNrf(R, RX_ADDR_P0 + reg, packet, 5),5);
+		}
+		else if(value == 'V') {
+			serialSendString("Which array address do you want to write\n\r");
+			serialSendString("00: RX_P0, 01: RX_P1, 06: TX_ADDR\n\r");
+			uint8_t reg = USART_ReceiveHexi();
+			serialSendString("You picked address ");
+			SendHexiByte(reg);
+			serialSendString(" What do you want to write to it\n\r");
+			for(i=0;i<5;i++) {
+				packet[i] = USART_ReceiveHexi();
+			}
+			WriteToNrf(W, RX_ADDR_P0 + reg, packet, 5);
+			serialSendString("You wrote: ");
+			SendHexiArary(packet,5);
+			USART_SendByte('\n');
+			USART_SendByte('\r');
+		}		 
+		else if(value >= 'A' && value <= 'J') {
+			SendHexiByte(GetReg(value - 'A'));
+			value = 0x00;
+		}
+		else if(value == 'K') {
+			SendHexiArary(WriteToNrf(R, TX_ADDR, packet, 5),5);
+			value = 0x0;
+		}
+		else if(value == 'L') {
+			SendHexiArary(WriteToNrf(R, RX_ADDR_P1, packet, 5),5);
+			value = 0x0;
+		}
+		else if (value == 'M') {
+			transmit_payload(packet);
+			SendHexiByte(0xFF);
+			value = 0x0;
+		}
+		else if (value == 'N') {
+			reset();
+			SendHexiByte(0xFF);
+			value = 0x0;
+		}
+		else if(value >= 'O' && value <= 'Q') {
+			//for rx_pw
+			SendHexiByte(GetReg((value - 'O')+ 0X11 ));
+			value = 0x00;
+		}
+		else {
+			PORTB &= (~(0x01));
+		}
 			 
-	if((rBuff.Head+1)%BUFF_SIZE != rBuff.Tail)
-	{
-		USART_SendByte(readCircbuff(&rBuff));  // send value
-		//_delay_ms(250);
-		// delay just to stop Hyperterminal screen cluttering up
-	}
-     //USART_SendByte(value);  // send value 
-     //_delay_ms(250);         
-		         // delay just to stop Hyperterminal screen cluttering up    
+		if((rBuff.Head+1)%BUFF_SIZE != rBuff.Tail) {
+			USART_SendByte(readCircbuff(&rBuff));  // send value
+			//_delay_ms(250);
+			// delay just to stop Hyperterminal screen cluttering up
+		}
+		 //USART_SendByte(value);  // send value 
+		 //_delay_ms(250);         
+					 // delay just to stop Hyperterminal screen cluttering up    
    }
 }

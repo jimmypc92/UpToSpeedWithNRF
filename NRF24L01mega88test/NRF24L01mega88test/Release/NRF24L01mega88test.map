@@ -1,7 +1,5 @@
 Archive member included because of file (symbol)
 
-C:\Users\Jimmy\Documents\Atmel Studio\6.2\LibCircBuff\LibCircBuff\Release\libLibCircBuff.a(LibCircBuff.o)
-                              NRF24L01mega88test.o (initCircBuff)
 c:/program files (x86)/atmel/atmel toolchain/avr8 gcc/native/3.4.1061/avr8-gnu-toolchain/bin/../lib/gcc/avr/4.8.1/avr4\libgcc.a(_exit.o)
                               c:/program files (x86)/atmel/atmel toolchain/avr8 gcc/native/3.4.1061/avr8-gnu-toolchain/bin/../lib/gcc/avr/4.8.1/../../../../avr/lib/avr4/crtm88a.o (exit)
 c:/program files (x86)/atmel/atmel toolchain/avr8 gcc/native/3.4.1061/avr8-gnu-toolchain/bin/../lib/gcc/avr/4.8.1/avr4\libgcc.a(_copy_data.o)
@@ -16,9 +14,8 @@ Discarded input sections
  .text          0x00000000        0x0 NRF24L01mega88test.o
  .data          0x00000000        0x0 NRF24L01mega88test.o
  .bss           0x00000000        0x0 NRF24L01mega88test.o
- .text          0x00000000        0x0 C:\Users\Jimmy\Documents\Atmel Studio\6.2\LibCircBuff\LibCircBuff\Release\libLibCircBuff.a(LibCircBuff.o)
- .data          0x00000000        0x0 C:\Users\Jimmy\Documents\Atmel Studio\6.2\LibCircBuff\LibCircBuff\Release\libLibCircBuff.a(LibCircBuff.o)
- .bss           0x00000000        0x0 C:\Users\Jimmy\Documents\Atmel Studio\6.2\LibCircBuff\LibCircBuff\Release\libLibCircBuff.a(LibCircBuff.o)
+ .text._Z12initCircBuffPV10CircBuff_t
+                0x00000000       0x16 NRF24L01mega88test.o
  .text          0x00000000        0x0 c:/program files (x86)/atmel/atmel toolchain/avr8 gcc/native/3.4.1061/avr8-gnu-toolchain/bin/../lib/gcc/avr/4.8.1/avr4\libgcc.a(_exit.o)
  .data          0x00000000        0x0 c:/program files (x86)/atmel/atmel toolchain/avr8 gcc/native/3.4.1061/avr8-gnu-toolchain/bin/../lib/gcc/avr/4.8.1/avr4\libgcc.a(_exit.o)
  .bss           0x00000000        0x0 c:/program files (x86)/atmel/atmel toolchain/avr8 gcc/native/3.4.1061/avr8-gnu-toolchain/bin/../lib/gcc/avr/4.8.1/avr4\libgcc.a(_exit.o)
@@ -87,7 +84,6 @@ LOAD c:/program files (x86)/atmel/atmel toolchain/avr8 gcc/native/3.4.1061/avr8-
 LOAD NRF24L01mega88test.o
 START GROUP
 LOAD c:/program files (x86)/atmel/atmel toolchain/avr8 gcc/native/3.4.1061/avr8-gnu-toolchain/bin/../lib/gcc/avr/4.8.1/../../../../avr/lib/avr4\libm.a
-LOAD C:\Users\Jimmy\Documents\Atmel Studio\6.2\LibCircBuff\LibCircBuff\Release\libLibCircBuff.a
 END GROUP
 LOAD c:/program files (x86)/atmel/atmel toolchain/avr8 gcc/native/3.4.1061/avr8-gnu-toolchain/bin/../lib/gcc/avr/4.8.1/avr4\libgcc.a
 LOAD c:/program files (x86)/atmel/atmel toolchain/avr8 gcc/native/3.4.1061/avr8-gnu-toolchain/bin/../lib/gcc/avr/4.8.1/../../../../avr/lib/avr4\libm.a
@@ -187,7 +183,7 @@ END GROUP
 .rela.plt
  *(.rela.plt)
 
-.text           0x00000000      0x6ca
+.text           0x00000000      0x630
  *(.vectors)
  .vectors       0x00000000       0x34 c:/program files (x86)/atmel/atmel toolchain/avr8 gcc/native/3.4.1061/avr8-gnu-toolchain/bin/../lib/gcc/avr/4.8.1/../../../../avr/lib/avr4/crtm88a.o
                 0x00000000                __vector_default
@@ -271,73 +267,71 @@ END GROUP
                 0x0000006a                __vector_20
                 0x0000006c                . = ALIGN (0x2)
  *(.text.*)
+ .text._Z12readCircbuffPV10CircBuff_t
+                0x0000006c       0x20 NRF24L01mega88test.o
+                0x0000006c                _Z12readCircbuffPV10CircBuff_t
+ .text._Z13writeCircBuffPV10CircBuff_th
+                0x0000008c       0x26 NRF24L01mega88test.o
+                0x0000008c                _Z13writeCircBuffPV10CircBuff_th
  .text.__vector_18
-                0x0000006c       0x5a NRF24L01mega88test.o
-                0x0000006c                __vector_18
+                0x000000b2       0x5a NRF24L01mega88test.o
+                0x000000b2                __vector_18
  .text._Z10USART_Initv
-                0x000000c6       0x20 NRF24L01mega88test.o
-                0x000000c6                _Z10USART_Initv
+                0x0000010c       0x20 NRF24L01mega88test.o
+                0x0000010c                _Z10USART_Initv
  .text._Z14USART_SendByteh
-                0x000000e6       0x10 NRF24L01mega88test.o
-                0x000000e6                _Z14USART_SendByteh
+                0x0000012c        0xe NRF24L01mega88test.o
+                0x0000012c                _Z14USART_SendByteh
  .text._Z17USART_ReceiveBytev
-                0x000000f6       0x10 NRF24L01mega88test.o
-                0x000000f6                _Z17USART_ReceiveBytev
+                0x0000013a        0xe NRF24L01mega88test.o
+                0x0000013a                _Z17USART_ReceiveBytev
  .text._Z9Determineh
-                0x00000106       0x10 NRF24L01mega88test.o
-                0x00000106                _Z9Determineh
+                0x00000148       0x10 NRF24L01mega88test.o
+                0x00000148                _Z9Determineh
  .text._Z17USART_ReceiveHexiv
-                0x00000116       0x16 NRF24L01mega88test.o
-                0x00000116                _Z17USART_ReceiveHexiv
- .text._Z12SendHexiByteh
-                0x0000012c       0x2e NRF24L01mega88test.o
-                0x0000012c                _Z12SendHexiByteh
- .text._Z13SendHexiAraryPhi
-                0x0000015a       0x2a NRF24L01mega88test.o
-                0x0000015a                _Z13SendHexiAraryPhi
- .text._Z16serialSendStringPKc
-                0x00000184       0x1c NRF24L01mega88test.o
-                0x00000184                _Z16serialSendStringPKc
+                0x00000158       0x16 NRF24L01mega88test.o
+                0x00000158                _Z17USART_ReceiveHexiv
  .text._Z8Led_initv
-                0x000001a0        0x6 NRF24L01mega88test.o
-                0x000001a0                _Z8Led_initv
+                0x0000016e        0x6 NRF24L01mega88test.o
+                0x0000016e                _Z8Led_initv
  .text._Z7InitSPIv
-                0x000001a6       0x1c NRF24L01mega88test.o
-                0x000001a6                _Z7InitSPIv
+                0x00000174       0x1c NRF24L01mega88test.o
+                0x00000174                _Z7InitSPIv
  .text._Z12WriteByteSPIh
-                0x000001c2        0xc NRF24L01mega88test.o
-                0x000001c2                _Z12WriteByteSPIh
+                0x00000190        0xc NRF24L01mega88test.o
+                0x00000190                _Z12WriteByteSPIh
  .text._Z6GetRegh
-                0x000001ce        0xc NRF24L01mega88test.o
-                0x000001ce                _Z6GetRegh
+                0x0000019c        0xc NRF24L01mega88test.o
+                0x0000019c                _Z6GetRegh
  .text._Z10WriteToNrfhhPhh
-                0x000001da       0x7e NRF24L01mega88test.o
-                0x000001da                _Z10WriteToNrfhhPhh
+                0x000001a8       0x8c NRF24L01mega88test.o
+                0x000001a8                _Z10WriteToNrfhhPhh
  .text._Z13nrf24L01_initv
-                0x00000258      0x134 NRF24L01mega88test.o
-                0x00000258                _Z13nrf24L01_initv
+                0x00000234      0x106 NRF24L01mega88test.o
+                0x00000234                _Z13nrf24L01_initv
  .text._Z16transmit_payloadPh
-                0x0000038c       0x48 NRF24L01mega88test.o
-                0x0000038c                _Z16transmit_payloadPh
+                0x0000033a       0x48 NRF24L01mega88test.o
+                0x0000033a                _Z16transmit_payloadPh
  .text._Z5resetv
-                0x000003d4       0x2e NRF24L01mega88test.o
-                0x000003d4                _Z5resetv
- .text.main     0x00000402      0x268 NRF24L01mega88test.o
-                0x00000402                main
- .text.initCircBuff
-                0x0000066a       0x16 C:\Users\Jimmy\Documents\Atmel Studio\6.2\LibCircBuff\LibCircBuff\Release\libLibCircBuff.a(LibCircBuff.o)
-                0x0000066a                initCircBuff
- .text.readCircbuff
-                0x00000680       0x20 C:\Users\Jimmy\Documents\Atmel Studio\6.2\LibCircBuff\LibCircBuff\Release\libLibCircBuff.a(LibCircBuff.o)
-                0x00000680                readCircbuff
- .text.writeCircBuff
-                0x000006a0       0x26 C:\Users\Jimmy\Documents\Atmel Studio\6.2\LibCircBuff\LibCircBuff\Release\libLibCircBuff.a(LibCircBuff.o)
-                0x000006a0                writeCircBuff
-                0x000006c6                . = ALIGN (0x2)
+                0x00000382       0x2e NRF24L01mega88test.o
+                0x00000382                _Z5resetv
+ .text._Z12SendHexiByteh
+                0x000003b0       0x26 NRF24L01mega88test.o
+                0x000003b0                _Z12SendHexiByteh
+ .text._Z13SendHexiAraryPhi
+                0x000003d6       0x32 NRF24L01mega88test.o
+                0x000003d6                _Z13SendHexiAraryPhi
+ .text._Z16serialSendStringPKc
+                0x00000408       0x16 NRF24L01mega88test.o
+                0x00000408                _Z16serialSendStringPKc
+ .text.startup.main
+                0x0000041e      0x20e NRF24L01mega88test.o
+                0x0000041e                main
+                0x0000062c                . = ALIGN (0x2)
  *(.fini9)
- .fini9         0x000006c6        0x0 c:/program files (x86)/atmel/atmel toolchain/avr8 gcc/native/3.4.1061/avr8-gnu-toolchain/bin/../lib/gcc/avr/4.8.1/avr4\libgcc.a(_exit.o)
-                0x000006c6                _exit
-                0x000006c6                exit
+ .fini9         0x0000062c        0x0 c:/program files (x86)/atmel/atmel toolchain/avr8 gcc/native/3.4.1061/avr8-gnu-toolchain/bin/../lib/gcc/avr/4.8.1/avr4\libgcc.a(_exit.o)
+                0x0000062c                _exit
+                0x0000062c                exit
  *(.fini9)
  *(.fini8)
  *(.fini8)
@@ -356,46 +350,46 @@ END GROUP
  *(.fini1)
  *(.fini1)
  *(.fini0)
- .fini0         0x000006c6        0x4 c:/program files (x86)/atmel/atmel toolchain/avr8 gcc/native/3.4.1061/avr8-gnu-toolchain/bin/../lib/gcc/avr/4.8.1/avr4\libgcc.a(_exit.o)
+ .fini0         0x0000062c        0x4 c:/program files (x86)/atmel/atmel toolchain/avr8 gcc/native/3.4.1061/avr8-gnu-toolchain/bin/../lib/gcc/avr/4.8.1/avr4\libgcc.a(_exit.o)
  *(.fini0)
-                0x000006ca                _etext = .
+                0x00000630                _etext = .
 
-.data           0x00800100      0x132 load address 0x000006ca
+.data           0x00800100      0x104 load address 0x00000630
                 0x00800100                PROVIDE (__data_start, .)
  *(.data)
  *(.data*)
  *(.rodata)
  *(.rodata*)
  .rodata.str1.1
-                0x00800100      0x131 NRF24L01mega88test.o
-                                0x134 (size before relaxing)
+                0x00800100      0x103 NRF24L01mega88test.o
+                                0x106 (size before relaxing)
  *(.gnu.linkonce.d*)
-                0x00800232                . = ALIGN (0x2)
- *fill*         0x00800231        0x1 
-                0x00800232                _edata = .
-                0x00800232                PROVIDE (__data_end, .)
+                0x00800204                . = ALIGN (0x2)
+ *fill*         0x00800203        0x1 
+                0x00800204                _edata = .
+                0x00800204                PROVIDE (__data_end, .)
 
-.bss            0x00800232       0x65
-                0x00800232                PROVIDE (__bss_start, .)
+.bss            0x00800204       0x65
+                0x00800204                PROVIDE (__bss_start, .)
  *(.bss)
  *(.bss*)
  .bss._ZZ10WriteToNrfhhPhhE3ret
-                0x00800232       0x20 NRF24L01mega88test.o
- .bss.rBuff     0x00800252       0x44 NRF24L01mega88test.o
-                0x00800252                rBuff
- .bss.value     0x00800296        0x1 NRF24L01mega88test.o
-                0x00800296                value
+                0x00800204       0x20 NRF24L01mega88test.o
+ .bss.rBuff     0x00800224       0x44 NRF24L01mega88test.o
+                0x00800224                rBuff
+ .bss.value     0x00800268        0x1 NRF24L01mega88test.o
+                0x00800268                value
  *(COMMON)
-                0x00800297                PROVIDE (__bss_end, .)
-                0x000006ca                __data_load_start = LOADADDR (.data)
-                0x000007fc                __data_load_end = (__data_load_start + SIZEOF (.data))
+                0x00800269                PROVIDE (__bss_end, .)
+                0x00000630                __data_load_start = LOADADDR (.data)
+                0x00000734                __data_load_end = (__data_load_start + SIZEOF (.data))
 
-.noinit         0x00800297        0x0
-                0x00800297                PROVIDE (__noinit_start, .)
+.noinit         0x00800269        0x0
+                0x00800269                PROVIDE (__noinit_start, .)
  *(.noinit*)
-                0x00800297                PROVIDE (__noinit_end, .)
-                0x00800297                _end = .
-                0x00800297                PROVIDE (__heap_start, .)
+                0x00800269                PROVIDE (__noinit_end, .)
+                0x00800269                _end = .
+                0x00800269                PROVIDE (__heap_start, .)
 
 .eeprom         0x00810000        0x0
  *(.eeprom*)
@@ -438,7 +432,6 @@ END GROUP
  *(.comment)
  .comment       0x00000000       0x30 NRF24L01mega88test.o
                                  0x31 (size before relaxing)
- .comment       0x00000000       0x31 C:\Users\Jimmy\Documents\Atmel Studio\6.2\LibCircBuff\LibCircBuff\Release\libLibCircBuff.a(LibCircBuff.o)
 
 .note.gnu.build-id
  *(.note.gnu.build-id)
@@ -455,38 +448,29 @@ END GROUP
 .debug_sfnames
  *(.debug_sfnames)
 
-.debug_aranges  0x00000000       0xa8
+.debug_aranges
  *(.debug_aranges)
- .debug_aranges
-                0x00000000       0xa8 NRF24L01mega88test.o
 
 .debug_pubnames
  *(.debug_pubnames)
 
-.debug_info     0x00000000     0x110e
+.debug_info
  *(.debug_info .gnu.linkonce.wi.*)
- .debug_info    0x00000000     0x110e NRF24L01mega88test.o
 
-.debug_abbrev   0x00000000      0x337
+.debug_abbrev
  *(.debug_abbrev)
- .debug_abbrev  0x00000000      0x337 NRF24L01mega88test.o
 
-.debug_line     0x00000000      0x3b3
+.debug_line
  *(.debug_line .debug_line.* .debug_line_end)
- .debug_line    0x00000000      0x3b3 NRF24L01mega88test.o
 
-.debug_frame    0x00000000      0x20c
+.debug_frame
  *(.debug_frame)
- .debug_frame   0x00000000      0x20c NRF24L01mega88test.o
 
-.debug_str      0x00000000      0x469
+.debug_str
  *(.debug_str)
- .debug_str     0x00000000      0x469 NRF24L01mega88test.o
-                                0x4b2 (size before relaxing)
 
-.debug_loc      0x00000000      0x847
+.debug_loc
  *(.debug_loc)
- .debug_loc     0x00000000      0x847 NRF24L01mega88test.o
 
 .debug_macinfo
  *(.debug_macinfo)
@@ -506,9 +490,8 @@ END GROUP
 .debug_pubtypes
  *(.debug_pubtypes)
 
-.debug_ranges   0x00000000       0x98
+.debug_ranges
  *(.debug_ranges)
- .debug_ranges  0x00000000       0x98 NRF24L01mega88test.o
 
 .debug_macro
  *(.debug_macro)

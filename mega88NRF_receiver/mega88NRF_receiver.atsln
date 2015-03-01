@@ -1,0 +1,20 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Atmel Studio Solution File, Format Version 11.00
+Project("{E66E83B9-2572-4076-B26E-6BE79FF3018A}") = "mega88NRF_receiver", "mega88NRF_receiver\mega88NRF_receiver.cppproj", "{A041DF30-4933-4153-93C5-314F5588599E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|AVR = Debug|AVR
+		Release|AVR = Release|AVR
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A041DF30-4933-4153-93C5-314F5588599E}.Debug|AVR.ActiveCfg = Debug|AVR
+		{A041DF30-4933-4153-93C5-314F5588599E}.Debug|AVR.Build.0 = Debug|AVR
+		{A041DF30-4933-4153-93C5-314F5588599E}.Release|AVR.ActiveCfg = Release|AVR
+		{A041DF30-4933-4153-93C5-314F5588599E}.Release|AVR.Build.0 = Release|AVR
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

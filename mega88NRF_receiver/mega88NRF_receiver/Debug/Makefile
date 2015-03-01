@@ -37,7 +37,7 @@ SUBDIRS :=
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS +=  \
-../NRF24L01mega88test.cpp
+../mega88NRF_receiver.cpp
 
 
 PREPROCESSING_SRCS += 
@@ -47,27 +47,26 @@ ASM_SRCS +=
 
 
 OBJS +=  \
-NRF24L01mega88test.o
+mega88NRF_receiver.o
 
 OBJS_AS_ARGS +=  \
-NRF24L01mega88test.o
+mega88NRF_receiver.o
 
 C_DEPS +=  \
-NRF24L01mega88test.d
+mega88NRF_receiver.d
 
 C_DEPS_AS_ARGS +=  \
-NRF24L01mega88test.d
+mega88NRF_receiver.d
 
-OUTPUT_FILE_PATH +=NRF24L01mega88test.elf
+OUTPUT_FILE_PATH +=mega88NRF_receiver.elf
 
-OUTPUT_FILE_PATH_AS_ARGS +=NRF24L01mega88test.elf
+OUTPUT_FILE_PATH_AS_ARGS +=mega88NRF_receiver.elf
 
 ADDITIONAL_DEPENDENCIES:=
 
 OUTPUT_FILE_DEP:= ./makedep.mk
 
-LIB_DEP+=  \
-C:/Users/Jimmy/Documents/Atmel\ Studio/6.2/LibCircBuff/LibCircBuff/Release/libLibCircBuff.a
+LIB_DEP+= 
 
 LINKER_SCRIPT_DEP+= 
 
@@ -108,13 +107,13 @@ all: $(OUTPUT_FILE_PATH) $(ADDITIONAL_DEPENDENCIES)
 $(OUTPUT_FILE_PATH): $(OBJS) $(USER_OBJS) $(OUTPUT_FILE_DEP) $(LIB_DEP) $(LINKER_SCRIPT_DEP)
 	@echo Building target: $@
 	@echo Invoking: AVR8/GNU Linker : 4.8.1
-	$(QUOTE)C:\Program Files (x86)\Atmel\Atmel Toolchain\AVR8 GCC\Native\3.4.1061\avr8-gnu-toolchain\bin\avr-g++.exe$(QUOTE) -o$(OUTPUT_FILE_PATH_AS_ARGS) $(OBJS_AS_ARGS) $(USER_OBJS) $(LIBS) -Wl,-Map="NRF24L01mega88test.map" -Wl,--start-group -Wl,-lm -Wl,-lLibCircBuff  -Wl,--end-group -Wl,-L"C:\Users\Jimmy\Documents\Atmel Studio\6.2\LibCircBuff\LibCircBuff\Release"  -Wl,--gc-sections -mmcu=atmega88a  
+	$(QUOTE)C:\Program Files (x86)\Atmel\Atmel Toolchain\AVR8 GCC\Native\3.4.1061\avr8-gnu-toolchain\bin\avr-g++.exe$(QUOTE) -o$(OUTPUT_FILE_PATH_AS_ARGS) $(OBJS_AS_ARGS) $(USER_OBJS) $(LIBS) -Wl,-Map="mega88NRF_receiver.map" -Wl,--start-group -Wl,-lm  -Wl,--end-group -Wl,--gc-sections -mmcu=atmega88a  
 	@echo Finished building target: $@
-	"C:\Program Files (x86)\Atmel\Atmel Toolchain\AVR8 GCC\Native\3.4.1061\avr8-gnu-toolchain\bin\avr-objcopy.exe" -O ihex -R .eeprom -R .fuse -R .lock -R .signature -R .user_signatures  "NRF24L01mega88test.elf" "NRF24L01mega88test.hex"
-	"C:\Program Files (x86)\Atmel\Atmel Toolchain\AVR8 GCC\Native\3.4.1061\avr8-gnu-toolchain\bin\avr-objcopy.exe" -j .eeprom  --set-section-flags=.eeprom=alloc,load --change-section-lma .eeprom=0  --no-change-warnings -O ihex "NRF24L01mega88test.elf" "NRF24L01mega88test.eep" || exit 0
-	"C:\Program Files (x86)\Atmel\Atmel Toolchain\AVR8 GCC\Native\3.4.1061\avr8-gnu-toolchain\bin\avr-objdump.exe" -h -S "NRF24L01mega88test.elf" > "NRF24L01mega88test.lss"
-	"C:\Program Files (x86)\Atmel\Atmel Toolchain\AVR8 GCC\Native\3.4.1061\avr8-gnu-toolchain\bin\avr-objcopy.exe" -O srec -R .eeprom -R .fuse -R .lock -R .signature -R .user_signatures "NRF24L01mega88test.elf" "NRF24L01mega88test.srec"
-	"C:\Program Files (x86)\Atmel\Atmel Toolchain\AVR8 GCC\Native\3.4.1061\avr8-gnu-toolchain\bin\avr-size.exe" "NRF24L01mega88test.elf"
+	"C:\Program Files (x86)\Atmel\Atmel Toolchain\AVR8 GCC\Native\3.4.1061\avr8-gnu-toolchain\bin\avr-objcopy.exe" -O ihex -R .eeprom -R .fuse -R .lock -R .signature -R .user_signatures  "mega88NRF_receiver.elf" "mega88NRF_receiver.hex"
+	"C:\Program Files (x86)\Atmel\Atmel Toolchain\AVR8 GCC\Native\3.4.1061\avr8-gnu-toolchain\bin\avr-objcopy.exe" -j .eeprom  --set-section-flags=.eeprom=alloc,load --change-section-lma .eeprom=0  --no-change-warnings -O ihex "mega88NRF_receiver.elf" "mega88NRF_receiver.eep" || exit 0
+	"C:\Program Files (x86)\Atmel\Atmel Toolchain\AVR8 GCC\Native\3.4.1061\avr8-gnu-toolchain\bin\avr-objdump.exe" -h -S "mega88NRF_receiver.elf" > "mega88NRF_receiver.lss"
+	"C:\Program Files (x86)\Atmel\Atmel Toolchain\AVR8 GCC\Native\3.4.1061\avr8-gnu-toolchain\bin\avr-objcopy.exe" -O srec -R .eeprom -R .fuse -R .lock -R .signature -R .user_signatures "mega88NRF_receiver.elf" "mega88NRF_receiver.srec"
+	"C:\Program Files (x86)\Atmel\Atmel Toolchain\AVR8 GCC\Native\3.4.1061\avr8-gnu-toolchain\bin\avr-size.exe" "mega88NRF_receiver.elf"
 	
 	
 
@@ -126,5 +125,5 @@ $(OUTPUT_FILE_PATH): $(OBJS) $(USER_OBJS) $(OUTPUT_FILE_DEP) $(LIB_DEP) $(LINKER
 clean:
 	-$(RM) $(OBJS_AS_ARGS) $(EXECUTABLES)  
 	-$(RM) $(C_DEPS_AS_ARGS)   
-	rm -rf "NRF24L01mega88test.elf" "NRF24L01mega88test.a" "NRF24L01mega88test.hex" "NRF24L01mega88test.lss" "NRF24L01mega88test.eep" "NRF24L01mega88test.map" "NRF24L01mega88test.srec" "NRF24L01mega88test.usersignatures"
+	rm -rf "mega88NRF_receiver.elf" "mega88NRF_receiver.a" "mega88NRF_receiver.hex" "mega88NRF_receiver.lss" "mega88NRF_receiver.eep" "mega88NRF_receiver.map" "mega88NRF_receiver.srec" "mega88NRF_receiver.usersignatures"
 	
