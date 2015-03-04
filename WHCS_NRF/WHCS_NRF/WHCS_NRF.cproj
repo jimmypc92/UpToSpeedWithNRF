@@ -98,6 +98,9 @@
     </ToolchainSettings>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="nRF24L01.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="WHCS_NRF.c">
       <SubType>compile</SubType>
     </Compile>
